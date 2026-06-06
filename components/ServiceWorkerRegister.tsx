@@ -15,6 +15,11 @@ export default function ServiceWorkerRegister() {
     const register = () => {
       navigator.serviceWorker
         .register("/sw.js")
+        .then((reg) => {
+          // Pull any newer worker immediately, so a stale/broken cache can't
+          // linger across deploys.
+          reg.update().catch(() => {});
+        })
         .catch(() => {
           /* offline support is a progressive enhancement; ignore failures */
         });

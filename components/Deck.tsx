@@ -20,6 +20,7 @@ const BACK_ART: Record<string, string> = {
   "messages from the earth": "/back-messages-from-the-earth.webp",
   "walking thoughts": "/back-walking-thoughts.webp",
   "nature meditations": "/back-nature-meditations.webp",
+  "strengthening affirmations": "/back-strengthening-affirmations.webp",
 };
 
 /** Title accent per category, drawn from its back artwork. */
@@ -27,7 +28,7 @@ const ACCENT: Record<string, string> = {
   "messages from the earth": "#c0301a",
   "walking thoughts": "#2f7d4f",
   "nature meditations": "#9f4777",
-  "strengthening affirmations": "#b3782f",
+  "strengthening affirmations": "#965740",
 };
 const DEFAULT_ACCENT = "#b3782f";
 

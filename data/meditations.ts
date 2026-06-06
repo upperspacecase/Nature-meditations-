@@ -199,6 +199,12 @@ export const cards: Card[] = [
     body: "Hiking fosters unity with nature. As we move through the forest, traverse a trail, or summit a peak, our bodies become one with the Earth. There are moments when our hearts beat in sync with the crunch of gravel underfoot and we feel both vulnerable and strong at the same time. Today, as you walk, imagine you are connected to the healing power of Mother Earth. With each step, envision yourself leaving behind what burdens you and picking up the tools that will strengthen and fortify you. In what ways does being connected to Earth in this way heal you?",
   },
   {
+    id: "find-sweet-release",
+    title: "find sweet release",
+    category: "walking thoughts",
+    body: "The natural world is constantly releasing pressure. When our oceans swell, waves lap onto our shores. When clouds get full, they burst into rain and sprinkle our shoulders. When geysers overheat, they erupt into hot steam, radiating warmth. Today, as you walk, contemplate pressure and release in your own life. Is there anything building up inside of you on the verge of exploding? What conversations, activities, or decisions will help you ease the pressure in your life? How can you find moments of release?",
+  },
+  {
     id: "create-your-own-conditions",
     title: "create your own conditions",
     category: "strengthening affirmations",
