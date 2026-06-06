@@ -1,17 +1,19 @@
 # Nature Meditations
 
-A private, mobile-first card deck that recreates the daily-draw ritual from a
-physical deck of nature meditation cards. The whole screen is the deck: **tap
-the face-down card to draw** a random meditation, **tap it again** to slip it
-back into the deck, ready for the next draw. No buttons, no chrome.
+A private, mobile-first card deck that recreates the draw ritual from physical
+decks of nature meditation cards. The whole screen is the deck: **tap the deck
+and the cards fan out** across the page; **tap one** and it zooms in and flips
+to reveal the meditation; **tap it again** and it flips back and collapses into
+the deck. No buttons, no chrome.
 
-Each meditation auto-sizes to fit the card exactly — it never scrolls — and the
-layout (ochre title, vertical category label, navy body on a white card) mirrors
-the physical deck.
+Cards are grouped by **category** ("card type") — each has its own illustrated
+back and a matching title colour. Each meditation auto-sizes to fit the card
+exactly (it never scrolls), with a bold lowercase title and an airy, lower-
+weighted body.
 
 Built with Next.js (App Router) + TypeScript. Fully static, no backend, no
-accounts — all card text and the font ship in the bundle, so it works on flaky
-travel wifi and offline once loaded.
+accounts — all card text, the font, and the artwork ship in the bundle, so it
+works on flaky travel wifi and offline once loaded.
 
 ## Run it locally
 
@@ -32,26 +34,40 @@ array. **Adding a card = appending one object.** No code changes anywhere else.
 ```ts
 {
   id: "wisdom-in-the-soil",     // stable, unique slug
-  title: "wisdom in the soil",  // shown on the card back
+  title: "wisdom in the soil",  // the meditation title
   category: "messages from the earth",
   body: "There is wisdom in the soil...",  // the full meditation
-  // image: "/cards/wisdom-in-the-soil.jpg", // optional, see below
 }
 ```
 
-Drawing is pure random across the whole deck — every draw is independent and
-repeats are allowed, just like shuffling and cutting a physical deck.
+The `category` ties a card to its back artwork and title colour (below).
 
-## Adding card photos (later)
+## Card types (back artwork + title colour)
 
-The front of each card is a calm gradient placeholder by default. To show a real
-photo instead:
+Each category is a "card type" with its own illustrated back and a matching
+title colour, both registered in [`components/Deck.tsx`](components/Deck.tsx):
 
-1. Drop the image in `public/cards/` (e.g. `public/cards/wisdom-in-the-soil.jpg`).
-2. Add an `image` field to that card pointing at it
-   (e.g. `image: "/cards/wisdom-in-the-soil.jpg"`).
+```ts
+const BACK_ART = {
+  "messages from the earth": "/back-messages-from-the-earth.webp",
+  "walking thoughts":        "/back-walking-thoughts.webp",
+  "nature meditations":      "/back-nature-meditations.webp",
+};
+const ACCENT = {
+  "messages from the earth": "#c0301a", // red, from the canyon art
+  "walking thoughts":        "#2f7d4f", // green, from the hills art
+  "nature meditations":      "#9f4777", // plum, from the lake art
+  "strengthening affirmations": "#b3782f", // ochre (no art yet → leaf back)
+};
+```
 
-The gradient stays as the fallback for any card without a photo.
+To add art for a new type: drop a portrait image in `public/` (it can carry a
+wide matte — it gets trimmed to the artwork and framed by an even 5px white
+border), point `BACK_ART["your category"]` at it, and set a matching `ACCENT`
+colour. Any category without art falls back to a leaf emblem.
+
+Artwork is stored as WebP (~210–260 KB each) so it loads fast and caches well
+for offline use.
 
 ## Deploy to Vercel
 
@@ -86,7 +102,7 @@ app/
   fonts.ts          # bundled Poppins (next/font/local — no runtime fetch)
   fonts/            # the Poppins .woff2 files
 components/
-  Deck.tsx          # the tap-to-draw ritual + auto-fit text (client component)
+  Deck.tsx          # fan-out deck, flip, auto-fit text, back art (client component)
   Deck.module.css   # card styling, 3D flip, deck stack
 data/
   meditations.ts    # ← your cards live here

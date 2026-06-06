@@ -1,16 +1,15 @@
-/* Full-viewport stage; the card is the whole experience. */
-.stage {
+/* Full-viewport stage holding every card; tap the deck and they fan out. */
+.tableau {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  background: var(--bg);
 }
 
-/* The card matches the back artwork's proportions (≈0.647) so the white border
-   framing it stays an even 5px. Sized to the largest card that fits the viewport
-   (minus a small gap), capped at 30rem wide on desktop. */
-.deck {
+/* Each card is centered at the viewport middle (via margins); the inline
+   transform places it for the deck / fanned / focused state. Locked to the
+   artwork ratio so the framing border stays even. */
+.slot {
   --card-ratio: 0.647;
   --gap: clamp(0.75rem, 4.5vw, 2rem);
   --avail-w: calc(100vw - 2 * var(--gap));
@@ -18,59 +17,34 @@
     100dvh - 2 * var(--gap) - env(safe-area-inset-top, 0px) -
       env(safe-area-inset-bottom, 0px)
   );
-  width: min(var(--avail-w), var(--avail-h) * var(--card-ratio), 30rem);
-  aspect-ratio: var(--card-ratio);
-  position: relative;
-  perspective: 1800px;
-}
-
-/* --- Cards resting under the top card (the "deck") --- */
-.rest {
+  --card-w: min(var(--avail-w), var(--avail-h) * var(--card-ratio), 30rem);
   position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid var(--card-edge);
-  box-shadow: var(--card-shadow);
-}
-
-.rest1 {
-  transform: translate(1.4%, 1.6%) rotate(1.1deg);
-}
-.rest2 {
-  transform: translate(2.6%, 3%) rotate(2.1deg);
-  filter: brightness(0.985);
-}
-.rest3 {
-  transform: translate(3.6%, 4.2%) rotate(3deg);
-  filter: brightness(0.97);
-}
-
-/* --- The interactive top card --- */
-.flip {
-  position: absolute;
-  inset: 0;
-  margin: 0;
+  top: 50%;
+  left: 50%;
+  width: var(--card-w);
+  height: calc(var(--card-w) / var(--card-ratio));
+  margin-left: calc(var(--card-w) / -2);
+  margin-top: calc(var(--card-w) / var(--card-ratio) / -2);
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
+  transform-origin: center center;
+  perspective: 1400px;
+  transition:
+    transform 560ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 340ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
+.flipper {
+  position: absolute;
+  inset: 0;
   transform-style: preserve-3d;
-  transition: transform 420ms cubic-bezier(0.4, 0.1, 0.2, 1);
+  transition: transform 520ms cubic-bezier(0.4, 0.1, 0.2, 1);
 }
 
-.isFront .inner {
-  transform: rotateY(180deg);
-}
-
-.back,
+.backFace,
 .front {
   position: absolute;
   inset: 0;
@@ -83,15 +57,6 @@
   overflow: hidden;
 }
 
-/* --- Back: the face-down deck --- */
-.back {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.4rem;
-}
-
 /* Category artwork, framed by an even 5px white border (the card showing
    through). The artwork carries its own rounded corners. */
 .backArt {
@@ -102,23 +67,34 @@
   background-repeat: no-repeat;
 }
 
+/* Fallback back face for any category without artwork yet. */
+.backFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+}
+
 .emblem {
   display: block;
-  width: clamp(56px, 16vw, 92px);
-  height: clamp(56px, 16vw, 92px);
-  color: var(--ochre);
+  width: 26%;
+  aspect-ratio: 1;
+  color: currentColor;
   opacity: 0.85;
 }
 
 .backLabel {
-  color: var(--ochre);
+  color: currentColor;
   font-weight: 500;
-  font-size: clamp(0.7rem, 3.2vw, 0.85rem);
-  letter-spacing: 0.22em;
+  font-size: clamp(0.55rem, 2.4vw, 0.8rem);
+  letter-spacing: 0.16em;
   text-transform: lowercase;
 }
 
-/* --- Front: the meditation, matching the physical card --- */
+/* --- Front: the meditation --- */
 .front {
   transform: rotateY(180deg);
 }
