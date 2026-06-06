@@ -1,56 +1,60 @@
-.deck {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(1.25rem, 4vw, 2.25rem);
-  width: 100%;
-  max-width: var(--reading-width);
-  margin: 0 auto;
-  padding: clamp(1.5rem, 5vh, 3rem) 1.25rem
-    calc(env(safe-area-inset-bottom, 0px) + 2rem);
-}
-
-.masthead {
-  text-align: center;
-}
-
-.wordmark {
-  margin: 0;
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--ink);
-}
-
-.subtitle {
-  margin: 0.4rem 0 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  text-transform: lowercase;
-  color: var(--ink-soft);
-}
-
-/* --- Card stage & 3D flip --- */
+/* Full-viewport stage; the card is the whole experience. */
 .stage {
-  width: 100%;
-  perspective: 1600px;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Breathing room around the card; a touch more bottom/right for the deck stack. */
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 3.5vw)
+    calc(env(safe-area-inset-right, 0px) + 4.5vw)
+    calc(env(safe-area-inset-bottom, 0px) + 4.5vw)
+    calc(env(safe-area-inset-left, 0px) + 3.5vw);
 }
 
-.card {
+/* The deck occupies the available space, capped to a card-ish size on desktop. */
+.deck {
   position: relative;
   width: 100%;
-  /* Echo a tarot/oracle card proportion, capped so text never sprawls. */
-  aspect-ratio: 5 / 7;
-  max-height: 70vh;
-  margin: 0 auto;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: default;
+  height: 100%;
+  max-width: 30rem;
+  max-height: 46rem;
+  perspective: 1800px;
 }
 
-.card[role="button"] {
+/* --- Cards resting under the top card (the "deck") --- */
+.rest {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  box-shadow: var(--card-shadow);
+}
+
+.rest1 {
+  transform: translate(1.4%, 1.6%) rotate(1.1deg);
+}
+.rest2 {
+  transform: translate(2.6%, 3%) rotate(2.1deg);
+  filter: brightness(0.985);
+}
+.rest3 {
+  transform: translate(3.6%, 4.2%) rotate(3deg);
+  filter: brightness(0.97);
+}
+
+/* --- The interactive top card --- */
+.flip {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inner {
@@ -58,160 +62,104 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 360ms ease;
-  border-radius: var(--radius);
+  transition: transform 420ms cubic-bezier(0.4, 0.1, 0.2, 1);
 }
 
-.isBack .inner {
+.isFront .inner {
   transform: rotateY(180deg);
 }
 
-.front,
-.back {
+.back,
+.front {
   position: absolute;
   inset: 0;
   border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  box-shadow: var(--card-shadow);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  box-shadow: var(--card-shadow);
   overflow: hidden;
 }
 
-/* --- Front (art / placeholder) --- */
-.front {
-  background-color: var(--paper-deep);
-  background-image:
-    radial-gradient(circle at 28% 22%, rgba(155, 138, 166, 0.55), transparent 55%),
-    radial-gradient(circle at 75% 78%, rgba(138, 154, 123, 0.55), transparent 55%),
-    linear-gradient(150deg, #efe7d8 0%, #e6dcc9 100%);
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(74, 34, 48, 0.08);
-}
-
-.frontPlaceholder {
+/* --- Back: the face-down deck --- */
+.back {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  color: var(--ink-soft);
-  text-align: center;
-  padding: 1.5rem;
+  justify-content: center;
+  gap: 1.4rem;
 }
 
-.frontGlyph {
-  font-size: clamp(2.5rem, 12vw, 4rem);
-  color: var(--ink);
-  opacity: 0.55;
-  line-height: 1;
+.emblem {
+  display: block;
+  width: clamp(56px, 16vw, 92px);
+  height: clamp(56px, 16vw, 92px);
+  color: var(--ochre);
+  opacity: 0.85;
 }
 
-.frontCategory {
-  font-size: 0.9rem;
-  letter-spacing: 0.14em;
+.backLabel {
+  color: var(--ochre);
+  font-weight: 500;
+  font-size: clamp(0.7rem, 3.2vw, 0.85rem);
+  letter-spacing: 0.22em;
   text-transform: lowercase;
 }
 
-/* --- Back (meditation text) --- */
-.back {
+/* --- Front: the meditation, matching the physical card --- */
+.front {
   transform: rotateY(180deg);
-  background: linear-gradient(160deg, #fbf7ef 0%, #f3ebdd 100%);
-  border: 1px solid rgba(74, 34, 48, 0.1);
-  display: flex;
 }
 
-/* Soft fade at the bottom edge to signal that a longer meditation scrolls. */
-.back::after {
-  content: "";
+/* The measured/auto-fitted content box. `font-size` is set by JS; everything
+   below is sized in `em` so the whole card scales together. */
+.face {
   position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 1px;
-  height: 3rem;
-  border-radius: 0 0 var(--radius) var(--radius);
-  background: linear-gradient(to top, #f3ebdd 18%, rgba(243, 235, 221, 0));
-  pointer-events: none;
-}
-
-.reading {
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: clamp(1.5rem, 6vw, 2.5rem);
-  /* extra room so the last line clears the fade affordance */
-  padding-bottom: 3.25rem;
-}
-
-.category {
-  align-self: flex-start;
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--sage);
-  border-bottom: 1px solid rgba(138, 154, 123, 0.5);
-  padding-bottom: 0.35rem;
+  padding: 8.5% 9% 9.5%;
+  overflow: hidden;
+  text-align: left;
 }
 
 .title {
   margin: 0;
-  font-size: clamp(1.4rem, 6vw, 1.8rem);
+  color: var(--ochre);
+  font-weight: 700;
+  font-size: 2.5em;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  text-transform: lowercase;
+}
+
+/* Body block anchored toward the lower portion of the card, like the deck. */
+.bodyRow {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.1em;
+  padding-top: 1.2em;
+}
+
+.vlabel {
+  flex: none;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: var(--ochre);
   font-weight: 600;
-  color: var(--ink);
-  line-height: 1.2;
+  font-size: 0.92em;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
 }
 
 .body {
   margin: 0;
-  font-size: clamp(1.05rem, 4.4vw, 1.18rem);
-  line-height: 1.75;
-  color: var(--ink);
-}
-
-/* --- Controls --- */
-.controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.draw {
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  padding: 1rem 2.5rem;
-  min-height: 56px; /* large, one-handed tap target */
-  border-radius: 999px;
-  box-shadow: 0 10px 24px -10px rgba(74, 34, 48, 0.6);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
-}
-
-.draw:hover {
-  background: #3c1b27;
-}
-
-.draw:active {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: 0 6px 16px -10px rgba(74, 34, 48, 0.6);
-}
-
-.hint {
-  margin: 0;
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  color: var(--ink-soft);
-  text-transform: lowercase;
+  color: var(--navy);
+  font-weight: 400;
+  font-size: 1em;
+  line-height: 1.5;
+  letter-spacing: 0.002em;
 }

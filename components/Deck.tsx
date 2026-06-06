@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { Card } from "@/data/meditations";
 import styles from "./Deck.module.css";
 
@@ -14,110 +14,125 @@ function pickRandom(cards: Card[]): Card {
 }
 
 export default function Deck({ cards }: Props) {
+  // `card` is the drawn (or last-drawn) card; `flipped` true = its face is up.
   const [card, setCard] = useState<Card | null>(null);
-  // `showBack` true = meditation text face up; false = art/front face up.
-  const [showBack, setShowBack] = useState(false);
-  const flipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [flipped, setFlipped] = useState(false);
+  const faceRef = useRef<HTMLDivElement>(null);
 
-  const drawn = card !== null;
-
-  const draw = useCallback(() => {
-    const next = pickRandom(cards);
-    if (flipTimer.current) clearTimeout(flipTimer.current);
-
-    if (showBack) {
-      // Already reading a card: flip down to the art, swap, then reveal the text.
-      setShowBack(false);
-      flipTimer.current = setTimeout(() => {
-        setCard(next);
-        setShowBack(true);
-      }, 180);
+  const handleTap = useCallback(() => {
+    if (flipped) {
+      // Showing a meditation → put it back in the deck, ready for the next draw.
+      // Keep `card` mounted so the face doesn't blank mid-flip.
+      setFlipped(false);
     } else {
-      setCard(next);
-      setShowBack(true);
+      // Face-down deck → draw a fresh random card and reveal it.
+      setCard(pickRandom(cards));
+      setFlipped(true);
     }
-  }, [cards, showBack]);
+  }, [cards, flipped]);
 
-  const toggleFace = useCallback(() => {
-    if (!drawn) return;
-    setShowBack((v) => !v);
-  }, [drawn]);
+  // Shrink the meditation text so the whole card fits the viewport — never scroll.
+  useLayoutEffect(() => {
+    const el = faceRef.current;
+    if (!el || !card) return;
+
+    const fit = () => {
+      let lo = 9;
+      // Cap the size relative to card width so short meditations don't balloon —
+      // body stays a consistent size across cards, anchored low like the deck.
+      let hi = Math.min(40, el.clientWidth * 0.072);
+      let best = lo;
+      // Binary-search the largest font size at which nothing overflows the card.
+      for (let i = 0; i < 16; i++) {
+        const mid = (lo + hi) / 2;
+        el.style.fontSize = `${mid}px`;
+        if (el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth) {
+          best = mid;
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      el.style.fontSize = `${best}px`;
+    };
+
+    fit();
+    // Re-fit once the bundled font is ready (metrics differ from the fallback).
+    document.fonts?.ready.then(fit).catch(() => {});
+
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [card]);
 
   return (
-    <section className={styles.deck} aria-label="Nature meditations deck">
-      <header className={styles.masthead}>
-        <h1 className={styles.wordmark}>nature meditations</h1>
-        <p className={styles.subtitle}>draw a card · read · breathe</p>
-      </header>
+    <main className={styles.stage}>
+      <div className={styles.deck}>
+        {/* Cards resting underneath, so the top card reads as drawn from a deck. */}
+        <div className={`${styles.rest} ${styles.rest3}`} aria-hidden="true" />
+        <div className={`${styles.rest} ${styles.rest2}`} aria-hidden="true" />
+        <div className={`${styles.rest} ${styles.rest1}`} aria-hidden="true" />
 
-      <div className={styles.stage}>
-        <div
-          className={`${styles.card} ${showBack ? styles.isBack : ""}`}
-          // The card itself is a flip control once a card has been drawn.
-          role={drawn ? "button" : undefined}
-          tabIndex={drawn ? 0 : -1}
+        <button
+          type="button"
+          className={`${styles.flip} ${flipped ? styles.isFront : ""}`}
+          onClick={handleTap}
           aria-label={
-            drawn
-              ? showBack
-                ? "Meditation text. Activate to see the card front."
-                : "Card front. Activate to read the meditation."
-              : undefined
+            flipped && card
+              ? `${card.title}, ${card.category}. Tap to return it to the deck.`
+              : "Face-down deck. Tap to draw a card."
           }
-          aria-hidden={!drawn}
-          onClick={toggleFace}
-          onKeyDown={(e) => {
-            if (drawn && (e.key === "Enter" || e.key === " ")) {
-              e.preventDefault();
-              toggleFace();
-            }
-          }}
         >
           <div className={styles.inner}>
-            {/* FRONT — art region (gradient placeholder, or a photo when present). */}
-            <div
-              className={styles.front}
-              style={
-                card?.image
-                  ? { backgroundImage: `url(${card.image})` }
-                  : undefined
-              }
-            >
-              {!card?.image && (
-                <div className={styles.frontPlaceholder}>
-                  <span className={styles.frontGlyph} aria-hidden="true">
-                    ❧
-                  </span>
-                  <span className={styles.frontCategory}>
-                    {drawn ? card!.category : "tap draw to begin"}
-                  </span>
+            {/* BACK — the face-down deck. */}
+            <div className={styles.back}>
+              <span className={styles.emblem} aria-hidden="true">
+                <Leaf />
+              </span>
+              <span className={styles.backLabel}>messages from the earth</span>
+            </div>
+
+            {/* FRONT — the meditation, laid out like the physical card. */}
+            <div className={styles.front}>
+              {card && (
+                <div className={styles.face} ref={faceRef}>
+                  <h1 className={styles.title}>{card.title}</h1>
+                  <div className={styles.bodyRow}>
+                    <span className={styles.vlabel}>{card.category}</span>
+                    <p className={styles.body}>{card.body}</p>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* BACK — the meditation text. */}
-            <div className={styles.back}>
-              {drawn && (
-                <article className={styles.reading}>
-                  <span className={styles.category}>{card!.category}</span>
-                  <h2 className={styles.title}>{card!.title}</h2>
-                  <p className={styles.body}>{card!.body}</p>
-                </article>
-              )}
-            </div>
           </div>
-        </div>
-      </div>
-
-      <div className={styles.controls}>
-        <button type="button" className={styles.draw} onClick={draw}>
-          {drawn ? "draw another" : "draw a card"}
         </button>
-        {drawn && (
-          <p className={styles.hint} aria-live="polite">
-            tap the card to {showBack ? "see the front" : "read it"}
-          </p>
-        )}
       </div>
-    </section>
+    </main>
+  );
+}
+
+function Leaf() {
+  return (
+    <svg viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+      <path
+        d="M60 14 C92 38, 92 82, 60 106 C28 82, 28 38, 60 14 Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M60 22 L60 100" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M60 44 L80 30 M60 64 L86 50 M60 84 L80 72"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M60 44 L40 30 M60 64 L34 50 M60 84 L40 72"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

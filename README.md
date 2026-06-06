@@ -1,12 +1,17 @@
 # Nature Meditations
 
 A private, mobile-first card deck that recreates the daily-draw ritual from a
-physical deck of nature meditation cards. Open the app, tap **draw**, read the
-meditation. That's it.
+physical deck of nature meditation cards. The whole screen is the deck: **tap
+the face-down card to draw** a random meditation, **tap it again** to slip it
+back into the deck, ready for the next draw. No buttons, no chrome.
+
+Each meditation auto-sizes to fit the card exactly — it never scrolls — and the
+layout (ochre title, vertical category label, navy body on a white card) mirrors
+the physical deck.
 
 Built with Next.js (App Router) + TypeScript. Fully static, no backend, no
-accounts — all card text ships in the bundle, so it works on flaky travel wifi
-and offline once loaded.
+accounts — all card text and the font ship in the bundle, so it works on flaky
+travel wifi and offline once loaded.
 
 ## Run it locally
 
@@ -78,9 +83,11 @@ app/
   layout.tsx        # metadata, manifest, service-worker registration
   page.tsx          # renders the deck
   globals.css       # palette + base styles
+  fonts.ts          # bundled Poppins (next/font/local — no runtime fetch)
+  fonts/            # the Poppins .woff2 files
 components/
-  Deck.tsx          # the draw + flip ritual (client component)
-  Deck.module.css   # card styling and 3D flip
+  Deck.tsx          # the tap-to-draw ritual + auto-fit text (client component)
+  Deck.module.css   # card styling, 3D flip, deck stack
 data/
   meditations.ts    # ← your cards live here
 public/
