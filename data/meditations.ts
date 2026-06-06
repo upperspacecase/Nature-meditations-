@@ -25,9 +25,20 @@ export type Card = {
   variant?: "poem" | "legend";
   /** solid colour for a poem/legend card (front + back tile) */
   panel?: string;
+  /** custom back-of-card image (overrides the category artwork) */
+  back?: string;
 };
 
 export const cards: Card[] = [
+  // The deck's "about" card sits on top, showing the cover on its back.
+  {
+    id: "deck-guide",
+    title: "about this deck",
+    category: "",
+    variant: "legend",
+    back: "/back-cover.webp",
+    body: "The color-coded cards in this deck are designed to help you engage with nature in the following ways:",
+  },
   {
     id: "you-are-your-true-nature",
     title: "you are your true nature",
@@ -387,15 +398,5 @@ export const cards: Card[] = [
     title: "earth as anchor",
     category: "nature meditations",
     body: "Plan a walk outside today. As you move through this walking meditation, feel your connection with the ground beneath your feet. Feel the unconditional support of the earth, providing for you, holding you, making each step forward possible. Whenever you feel adrift, remember you can always return to the feeling of the earth beneath your feet to ground and anchor you.",
-  },
-
-  // --- The deck's "about" card ---
-  {
-    id: "deck-guide",
-    title: "about this deck",
-    category: "",
-    variant: "legend",
-    panel: "#ead9b9",
-    body: "The color-coded cards in this deck are designed to help you engage with nature in the following ways:",
   },
 ];

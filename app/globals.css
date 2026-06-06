@@ -5,7 +5,9 @@
   --card-edge: rgba(40, 30, 20, 0.08);
   --ochre: #b3782f;       /* caramel/ochre ink — titles + vertical label */
   --navy: #2b3047;        /* deep desaturated navy — body text */
-  --card-shadow: 0 22px 45px -20px rgba(40, 28, 16, 0.55);
+  /* Kept light: this shadow is painted on every card in the fan, so a big blur
+     radius is expensive on mobile GPUs. */
+  --card-shadow: 0 8px 18px -10px rgba(40, 28, 16, 0.5);
   --radius: clamp(18px, 4.5vw, 30px);
 
   color-scheme: light;

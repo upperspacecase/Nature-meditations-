@@ -100,8 +100,23 @@ function Leaf() {
 export default function Deck({ cards }: Props) {
   const n = cards.length;
   const [phase, setPhase] = useState<Phase>("deck");
+  // `selected` = the tapped tile (drives its zoom/flip); `drawn` = the card
+  // whose meditation is shown (a random one from the tapped tile's section).
   const [selected, setSelected] = useState<number | null>(null);
+  const [drawn, setDrawn] = useState<number | null>(null);
   const [layout, setLayout] = useState<Layout | null>(null);
+
+  // Group card indices by category so tapping a section draws one at random.
+  const sections = useMemo(() => {
+    const map = new Map<string, number[]>();
+    cards.forEach((c, i) => {
+      if (c.variant || !c.category) return; // skip special cards
+      const arr = map.get(c.category) ?? [];
+      arr.push(i);
+      map.set(c.category, arr);
+    });
+    return map;
+  }, [cards]);
 
   const measureRef = useRef<HTMLButtonElement>(null);
 
@@ -130,7 +145,7 @@ export default function Deck({ cards }: Props) {
   // card never scrolls. Poem cards have a body but no header; the legend card
   // sizes itself with CSS and has neither.
   useLayoutEffect(() => {
-    if (selected === null) return;
+    if (drawn === null) return;
     const body = bodyRef.current;
     const bodyBox = bodyBoxRef.current;
     if (!body || !bodyBox) return;
@@ -165,21 +180,27 @@ export default function Deck({ cards }: Props) {
     ro.observe(bodyBox);
     if (headerBox) ro.observe(headerBox);
     return () => ro.disconnect();
-  }, [selected]);
+  }, [drawn]);
 
   const handleCardTap = useCallback(
     (i: number) => {
       if (phase === "deck") {
         setPhase("fanned");
       } else if (phase === "fanned") {
+        // Tap a section → draw a random card from that section; tap a special
+        // card (the legend) → show that card itself.
+        const tapped = cards[i];
+        const pool = tapped.variant ? null : sections.get(tapped.category);
+        const d = pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : i;
         setSelected(i);
+        setDrawn(d);
         setPhase("focused");
       } else if (phase === "focused" && i === selected) {
         // Flip back and collapse the whole spread to the deck.
         setPhase("deck");
       }
     },
-    [phase, selected]
+    [phase, selected, cards, sections]
   );
 
   // Tapping the empty background while fanned returns to the deck.
@@ -191,7 +212,10 @@ export default function Deck({ cards }: Props) {
   // returns to its original resting face.
   useEffect(() => {
     if (phase !== "deck" || selected === null) return;
-    const t = setTimeout(() => setSelected(null), 700);
+    const t = setTimeout(() => {
+      setSelected(null);
+      setDrawn(null);
+    }, 700);
     return () => clearTimeout(t);
   }, [phase, selected]);
 
@@ -204,10 +228,12 @@ export default function Deck({ cards }: Props) {
       let scale = 1;
 
       if (phase === "deck") {
-        const k = Math.min(i, 8); // subtle stacked depth, card 0 on top
-        x = k * 1.5;
-        y = k * 1.8;
-        rot = k * 0.5;
+        // Only the top few cards are offset; the rest sit exactly behind them
+        // so the deck reads as a clean little stack, not a messy fringe.
+        const k = Math.min(i, 3);
+        x = k * 3;
+        y = k * 4;
+        rot = 0;
         scale = 1;
       } else if (phase === "fanned" || (phase === "focused" && !isSel)) {
         const p = layout?.pos[i] ?? { x: 0, y: 0, rot: 0 };
@@ -259,6 +285,9 @@ export default function Deck({ cards }: Props) {
         const isSel = i === selected;
         const flipDelay = phase === "focused" && isSel ? 150 : 0;
         const interactive = isInteractive(i);
+        // The meditation shown on the selected tile is the randomly drawn card.
+        const content = isSel && drawn !== null ? cards[drawn] : card;
+        const contentAccent = ACCENT[content.category] ?? DEFAULT_ACCENT;
 
         return (
           <button
@@ -266,13 +295,17 @@ export default function Deck({ cards }: Props) {
             type="button"
             ref={i === 0 ? measureRef : undefined}
             className={styles.slot}
-            style={{ ...slotStyle(i), pointerEvents: interactive ? "auto" : "none" }}
+            style={{
+              ...slotStyle(i),
+              pointerEvents: interactive ? "auto" : "none",
+              perspective: isSel ? "1400px" : undefined,
+            }}
             aria-label={
               phase === "deck"
                 ? "Card deck. Tap to fan the cards out."
                 : phase === "focused" && isSel
-                  ? `${card.title}. Tap to return to the deck.`
-                  : `${card.category} card. Tap to draw it.`
+                  ? `${content.title}. Tap to return to the deck.`
+                  : `${card.category || "about"} card. Tap to draw it.`
             }
             aria-hidden={interactive ? undefined : true}
             tabIndex={interactive ? 0 : -1}
@@ -281,81 +314,96 @@ export default function Deck({ cards }: Props) {
               handleCardTap(i);
             }}
           >
-            <div
-              className={styles.flipper}
-              style={{
-                transform: showFront ? "rotateY(180deg)" : "rotateY(0deg)",
-                transitionDelay: `${flipDelay}ms`,
-              }}
-            >
-              {/* BACK — solid panel (special cards), artwork, or leaf fallback;
-                  framed by a 5px border. */}
-              <div className={styles.backFace}>
-                {card.panel ? (
-                  <div className={styles.backPanel} style={{ background: card.panel }} />
-                ) : art ? (
-                  <div
-                    className={styles.backArt}
-                    style={{ backgroundImage: `url("${art}")` }}
-                  />
-                ) : (
-                  <div className={styles.backFallback} style={{ color: accent }}>
-                    <span className={styles.emblem}>
-                      <Leaf />
-                    </span>
-                    <span className={styles.backLabel}>{card.category}</span>
-                  </div>
-                )}
-              </div>
+            {(() => {
+              // The back face: a custom back image, then artwork, then a solid
+              // panel, then the leaf fallback.
+              const back = card.back ? (
+                <div
+                  className={styles.backArt}
+                  style={{ backgroundImage: `url("${card.back}")` }}
+                />
+              ) : card.panel ? (
+                <div className={styles.backPanel} style={{ background: card.panel }} />
+              ) : art ? (
+                <div
+                  className={styles.backArt}
+                  style={{ backgroundImage: `url("${art}")` }}
+                />
+              ) : (
+                <div className={styles.backFallback} style={{ color: accent }}>
+                  <span className={styles.emblem}>
+                    <Leaf />
+                  </span>
+                  <span className={styles.backLabel}>{card.category}</span>
+                </div>
+              );
 
-              {/* FRONT — only mounted for the selected card. */}
-              <div className={styles.front}>
-                {isSel &&
-                  (card.variant === "legend" ? (
-                    <div className={styles.legendFace}>
-                      <p className={styles.legendIntro}>{card.body}</p>
-                      <ul className={styles.legendList}>
-                        {LEGEND_ORDER.map((cat) => (
-                          <li key={cat} className={styles.legendItem}>
-                            <span
-                              className={styles.legendHeading}
-                              style={{ color: ACCENT[cat] }}
-                            >
-                              {cat}
-                            </span>
-                            <span className={styles.legendDesc}>{LEGEND_DESC[cat]}</span>
-                          </li>
-                        ))}
-                      </ul>
+              // Only the selected card needs the 3D flip (two stacked faces +
+              // preserve-3d). Every other card is a single flat tile — far
+              // lighter on mobile GPUs/memory, which keeps iOS from killing the
+              // tab when all the cards are on screen.
+              if (!isSel) {
+                return <div className={styles.backFace}>{back}</div>;
+              }
+
+              const front =
+                content.variant === "legend" ? (
+                  <div className={styles.legendFace}>
+                    <p className={styles.legendIntro}>{content.body}</p>
+                    <ul className={styles.legendList}>
+                      {LEGEND_ORDER.map((cat) => (
+                        <li key={cat} className={styles.legendItem}>
+                          <span
+                            className={styles.legendHeading}
+                            style={{ color: ACCENT[cat] }}
+                          >
+                            {cat}
+                          </span>
+                          <span className={styles.legendDesc}>{LEGEND_DESC[cat]}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : content.variant === "poem" ? (
+                  <div className={styles.poemFace} style={{ background: content.panel }}>
+                    <div className={styles.poemBox} ref={bodyBoxRef}>
+                      <p className={styles.poem} ref={bodyRef}>
+                        {content.body}
+                      </p>
                     </div>
-                  ) : card.variant === "poem" ? (
-                    <div className={styles.poemFace} style={{ background: card.panel }}>
-                      <div className={styles.poemBox} ref={bodyBoxRef}>
-                        <p className={styles.poem} ref={bodyRef}>
-                          {card.body}
-                        </p>
-                      </div>
+                  </div>
+                ) : (
+                  <div className={styles.face}>
+                    <div className={styles.headerBox} ref={headerBoxRef}>
+                      <h1
+                        className={styles.title}
+                        ref={titleRef}
+                        style={{ color: contentAccent }}
+                      >
+                        {content.title}
+                      </h1>
                     </div>
-                  ) : (
-                    <div className={styles.face}>
-                      <div className={styles.headerBox} ref={headerBoxRef}>
-                        <h1
-                          className={styles.title}
-                          ref={titleRef}
-                          style={{ color: accent }}
-                        >
-                          {card.title}
-                        </h1>
-                      </div>
-                      <div className={styles.bodyBox} ref={bodyBoxRef}>
-                        <p className={styles.body} ref={bodyRef}>
-                          {card.body}
-                        </p>
-                      </div>
+                    <div className={styles.bodyBox} ref={bodyBoxRef}>
+                      <p className={styles.body} ref={bodyRef}>
+                        {content.body}
+                      </p>
                     </div>
-                  ))}
-              </div>
-            </div>
+                  </div>
+                );
+
+              return (
+                <div
+                  className={styles.flipper}
+                  style={{
+                    transform: showFront ? "rotateY(180deg)" : "rotateY(0deg)",
+                    transitionDelay: `${flipDelay}ms`,
+                  }}
+                >
+                  <div className={styles.backFace}>{back}</div>
+                  <div className={styles.front}>{front}</div>
+                </div>
+              );
+            })()}
           </button>
         );
       })}
