@@ -50,6 +50,18 @@ const LEGEND_DESC: Record<string, string> = {
 };
 const DEFAULT_ACCENT = "#b3782f";
 
+/**
+ * Order the deck the way the legend card reads: the "about" card on top, then
+ * each section in LEGEND_ORDER. (Array sort is stable, so cards keep their
+ * within-section order.)
+ */
+function orderCards(list: Card[]): Card[] {
+  const order = LEGEND_ORDER as readonly string[];
+  const rank = (c: Card) =>
+    c.variant === "legend" ? -1 : order.indexOf(c.category) === -1 ? 999 : order.indexOf(c.category);
+  return [...list].sort((a, b) => rank(a) - rank(b));
+}
+
 type Phase = "deck" | "fanned" | "focused";
 type Pos = { x: number; y: number; rot: number };
 type Layout = { pos: Pos[]; scale: number };
@@ -97,7 +109,9 @@ function Leaf() {
   );
 }
 
-export default function Deck({ cards }: Props) {
+export default function Deck({ cards: rawCards }: Props) {
+  // Lay the deck out in the legend's order (cover on top, then each section).
+  const cards = useMemo(() => orderCards(rawCards), [rawCards]);
   const n = cards.length;
   const [phase, setPhase] = useState<Phase>("deck");
   // `selected` = the tapped tile (drives its zoom/flip); `drawn` = the card
