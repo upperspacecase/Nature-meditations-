@@ -7,17 +7,19 @@
   justify-content: center;
 }
 
-/* The deck is locked to a 5:7 portrait card and sized to the largest such card
-   that fits the viewport (minus a small gap), capped at 30rem wide on desktop. */
+/* The card matches the back artwork's proportions (≈0.647) so the white border
+   framing it stays an even 5px. Sized to the largest card that fits the viewport
+   (minus a small gap), capped at 30rem wide on desktop. */
 .deck {
+  --card-ratio: 0.647;
   --gap: clamp(0.75rem, 4.5vw, 2rem);
   --avail-w: calc(100vw - 2 * var(--gap));
   --avail-h: calc(
     100dvh - 2 * var(--gap) - env(safe-area-inset-top, 0px) -
       env(safe-area-inset-bottom, 0px)
   );
-  width: min(var(--avail-w), var(--avail-h) * 5 / 7, 30rem);
-  aspect-ratio: 5 / 7;
+  width: min(var(--avail-w), var(--avail-h) * var(--card-ratio), 30rem);
+  aspect-ratio: var(--card-ratio);
   position: relative;
   perspective: 1800px;
 }
@@ -90,10 +92,11 @@
   gap: 1.4rem;
 }
 
-/* Category artwork, filling the card full-bleed (clipped to the card's radius). */
+/* Category artwork, framed by an even 5px white border (the card showing
+   through). The artwork carries its own rounded corners. */
 .backArt {
   position: absolute;
-  inset: 0;
+  inset: 5px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

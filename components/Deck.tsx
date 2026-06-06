@@ -14,7 +14,8 @@ type Props = {
  * leaf emblem for any category without art yet.
  */
 const BACK_ART: Record<string, string> = {
-  "messages from the earth": "/0A16B31D-48BD-4BCB-A152-60BC173867CD.png",
+  "messages from the earth": "/back-messages-from-the-earth.png",
+  "walking thoughts": "/back-walking-thoughts.png",
 };
 
 /** The back shown at rest, before anything is drawn. */
