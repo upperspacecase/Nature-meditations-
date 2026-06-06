@@ -389,7 +389,7 @@ export const cards: Card[] = [
     body: "Plan a walk outside today. As you move through this walking meditation, feel your connection with the ground beneath your feet. Feel the unconditional support of the earth, providing for you, holding you, making each step forward possible. Whenever you feel adrift, remember you can always return to the feeling of the earth beneath your feet to ground and anchor you.",
   },
 
-  // --- The deck's "about" card and the four colour section poems ---
+  // --- The deck's "about" card ---
   {
     id: "deck-guide",
     title: "about this deck",
@@ -397,37 +397,5 @@ export const cards: Card[] = [
     variant: "legend",
     panel: "#ead9b9",
     body: "The color-coded cards in this deck are designed to help you engage with nature in the following ways:",
-  },
-  {
-    id: "poem-we-are-like-space",
-    title: "we are like space",
-    category: "nature meditations",
-    variant: "poem",
-    panel: "#6e2b3d",
-    body: "we are not like cloud, we are like sky.\n\nwe are not like wave, we are like water.\n\nwe are not like rock, dust, and planet.\n\nwe are like space.\n\nwe are the emptiness.\n\nthe potential.\n\nthe possibility.\n\nwe are that which creates, makes spaces for, and allows.",
-  },
-  {
-    id: "poem-i-am-the-space",
-    title: "i am the space",
-    category: "strengthening affirmations",
-    variant: "poem",
-    panel: "#5c6584",
-    body: "i am the space, i am.\n\ni was buried beneath the weight of memories.\n\ni will be lost in the memory of cloudlike dreams.\n\ni am the vigilant observer,\n\nthe space of all that is in between.",
-  },
-  {
-    id: "poem-on-top-of-the-hill",
-    title: "on top of the hill",
-    category: "messages from the earth",
-    variant: "poem",
-    panel: "#c07a30",
-    body: "on top of the hill\n\nat the summit, there's skill.\n\nbelow in the valley, there's hope.\n\nour place in life may dictate what we see,\n\nbut it should never dictate how we see ourselves.",
-  },
-  {
-    id: "poem-breath-is-magic",
-    title: "breath is evidence of magic",
-    category: "walking thoughts",
-    variant: "poem",
-    panel: "#46703c",
-    body: "breath is evidence of magic.\n\nabundance is an invitation for generosity.\n\nlove is a reminder of interdependence.\n\nand movement is an opportunity for change.",
   },
 ];

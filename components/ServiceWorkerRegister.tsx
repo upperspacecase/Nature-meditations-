@@ -3,30 +3,27 @@
 import { useEffect } from "react";
 
 /**
- * Registers the service worker so the app works offline once visited — handy on
- * flaky travel wifi and for add-to-homescreen. No-op in dev or unsupported
- * browsers.
+ * Offline support is temporarily disabled because a stuck service worker could
+ * leave some phones unable to open the app. Rather than register a worker, this
+ * actively unregisters any existing one and clears its caches, so the app is
+ * always served fresh from the network. (The /sw.js file is now a self-retiring
+ * worker that does the same thing for devices that can't load the page.)
  */
 export default function ServiceWorkerRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
 
-    const register = () => {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => {
-          // Pull any newer worker immediately, so a stale/broken cache can't
-          // linger across deploys.
-          reg.update().catch(() => {});
-        })
-        .catch(() => {
-          /* offline support is a progressive enhancement; ignore failures */
-        });
-    };
+    navigator.serviceWorker
+      .getRegistrations?.()
+      .then((regs) => regs.forEach((r) => r.unregister().catch(() => {})))
+      .catch(() => {});
 
-    window.addEventListener("load", register);
-    return () => window.removeEventListener("load", register);
+    if (typeof caches !== "undefined" && caches.keys) {
+      caches
+        .keys()
+        .then((keys) => keys.forEach((k) => caches.delete(k)))
+        .catch(() => {});
+    }
   }, []);
 
   return null;
