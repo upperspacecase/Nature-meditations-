@@ -23,12 +23,30 @@ const BACK_ART: Record<string, string> = {
   "strengthening affirmations": "/back-strengthening-affirmations.webp",
 };
 
-/** Title accent per category, drawn from its back artwork. */
+/** Title accent per category — the deck's official colour coding. */
 const ACCENT: Record<string, string> = {
-  "messages from the earth": "#c0301a",
-  "walking thoughts": "#2f7d4f",
-  "nature meditations": "#9f4777",
-  "strengthening affirmations": "#965740",
+  "nature meditations": "#9a6a88", // plum
+  "walking thoughts": "#4e7d3f", // green
+  "messages from the earth": "#cf7f2f", // orange
+  "strengthening affirmations": "#465a7d", // slate
+};
+
+/** The "about" card's category list (in the order shown on the physical card). */
+const LEGEND_ORDER = [
+  "nature meditations",
+  "walking thoughts",
+  "messages from the earth",
+  "strengthening affirmations",
+] as const;
+const LEGEND_DESC: Record<string, string> = {
+  "nature meditations":
+    "Short meditation exercises to help you connect with the healing powers of the natural world.",
+  "walking thoughts":
+    "Questions to encourage mindful reflection and introspection while you're in nature.",
+  "messages from the earth":
+    "Prompts to bring your awareness to nature's enduring beauty and wisdom.",
+  "strengthening affirmations":
+    "Nature-inspired affirmations to help you strengthen your body and empower your mind.",
 };
 const DEFAULT_ACCENT = "#b3782f";
 
@@ -108,14 +126,16 @@ export default function Deck({ cards }: Props) {
     return () => window.removeEventListener("resize", compute);
   }, [n]);
 
-  // Fit the focused card's header + body within their boxes (never scroll).
+  // Fit the focused card's body (and header, if any) within their boxes so the
+  // card never scrolls. Poem cards have a body but no header; the legend card
+  // sizes itself with CSS and has neither.
   useLayoutEffect(() => {
     if (selected === null) return;
-    const title = titleRef.current;
-    const headerBox = headerBoxRef.current;
     const body = bodyRef.current;
     const bodyBox = bodyBoxRef.current;
-    if (!title || !headerBox || !body || !bodyBox) return;
+    if (!body || !bodyBox) return;
+    const title = titleRef.current;
+    const headerBox = headerBoxRef.current;
 
     const largestThatFits = (el: HTMLElement, box: HTMLElement, hi: number) => {
       let lo = 8;
@@ -136,14 +156,14 @@ export default function Deck({ cards }: Props) {
 
     const fit = () => {
       const bodyFont = largestThatFits(body, bodyBox, Math.min(22, bodyBox.clientWidth * 0.09));
-      largestThatFits(title, headerBox, bodyFont * 2.7);
+      if (title && headerBox) largestThatFits(title, headerBox, bodyFont * 2.7);
     };
 
     fit();
     document.fonts?.ready.then(fit).catch(() => {});
     const ro = new ResizeObserver(fit);
     ro.observe(bodyBox);
-    ro.observe(headerBox);
+    if (headerBox) ro.observe(headerBox);
     return () => ro.disconnect();
   }, [selected]);
 
@@ -268,9 +288,12 @@ export default function Deck({ cards }: Props) {
                 transitionDelay: `${flipDelay}ms`,
               }}
             >
-              {/* BACK — artwork (or leaf fallback), framed by a 5px border. */}
+              {/* BACK — solid panel (special cards), artwork, or leaf fallback;
+                  framed by a 5px border. */}
               <div className={styles.backFace}>
-                {art ? (
+                {card.panel ? (
+                  <div className={styles.backPanel} style={{ background: card.panel }} />
+                ) : art ? (
                   <div
                     className={styles.backArt}
                     style={{ backgroundImage: `url("${art}")` }}
@@ -285,22 +308,52 @@ export default function Deck({ cards }: Props) {
                 )}
               </div>
 
-              {/* FRONT — the meditation (only mounted for the selected card). */}
+              {/* FRONT — only mounted for the selected card. */}
               <div className={styles.front}>
-                {isSel && (
-                  <div className={styles.face}>
-                    <div className={styles.headerBox} ref={headerBoxRef}>
-                      <h1 className={styles.title} ref={titleRef} style={{ color: accent }}>
-                        {card.title}
-                      </h1>
+                {isSel &&
+                  (card.variant === "legend" ? (
+                    <div className={styles.legendFace}>
+                      <p className={styles.legendIntro}>{card.body}</p>
+                      <ul className={styles.legendList}>
+                        {LEGEND_ORDER.map((cat) => (
+                          <li key={cat} className={styles.legendItem}>
+                            <span
+                              className={styles.legendHeading}
+                              style={{ color: ACCENT[cat] }}
+                            >
+                              {cat}
+                            </span>
+                            <span className={styles.legendDesc}>{LEGEND_DESC[cat]}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className={styles.bodyBox} ref={bodyBoxRef}>
-                      <p className={styles.body} ref={bodyRef}>
-                        {card.body}
-                      </p>
+                  ) : card.variant === "poem" ? (
+                    <div className={styles.poemFace} style={{ background: card.panel }}>
+                      <div className={styles.poemBox} ref={bodyBoxRef}>
+                        <p className={styles.poem} ref={bodyRef}>
+                          {card.body}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className={styles.face}>
+                      <div className={styles.headerBox} ref={headerBoxRef}>
+                        <h1
+                          className={styles.title}
+                          ref={titleRef}
+                          style={{ color: accent }}
+                        >
+                          {card.title}
+                        </h1>
+                      </div>
+                      <div className={styles.bodyBox} ref={bodyBoxRef}>
+                        <p className={styles.body} ref={bodyRef}>
+                          {card.body}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           </button>

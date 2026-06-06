@@ -67,6 +67,13 @@
   background-repeat: no-repeat;
 }
 
+/* Solid-colour back for the special poem/legend cards, framed 5px. */
+.backPanel {
+  position: absolute;
+  inset: 5px;
+  border-radius: calc(var(--radius) - 5px);
+}
+
 /* Fallback back face for any category without artwork yet. */
 .backFallback {
   position: absolute;
@@ -161,4 +168,79 @@
   line-height: 1.46;
   letter-spacing: 0.002em;
   /* font-size set by JS */
+}
+
+/* --- Poem cards: full-bleed colour, white verse, vertically centred --- */
+.poemFace {
+  position: absolute;
+  inset: 0;
+}
+
+.poemBox {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 13%;
+  bottom: 12%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.poem {
+  margin: 0;
+  color: #fff;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.004em;
+  text-align: left;
+  white-space: pre-line; /* keep the stanza breaks */
+  /* font-size set by JS */
+}
+
+/* --- Legend / "about" card --- */
+.legendFace {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.05em;
+  padding: 7% 8%;
+  overflow: hidden;
+  text-align: center;
+  color: var(--navy);
+  font-size: clamp(0.66rem, 3vw, 0.92rem);
+}
+
+.legendIntro {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.legendList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95em;
+}
+
+.legendItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.legendHeading {
+  font-weight: 700;
+  font-size: 1.3em;
+  letter-spacing: -0.01em;
+  text-transform: lowercase;
+}
+
+.legendDesc {
+  line-height: 1.34;
 }

@@ -54,12 +54,21 @@ const BACK_ART = {
   "nature meditations":      "/back-nature-meditations.webp",
 };
 const ACCENT = {
-  "messages from the earth": "#c0301a", // red, from the canyon art
-  "walking thoughts":        "#2f7d4f", // green, from the hills art
-  "nature meditations":      "#9f4777", // plum, from the lake art
-  "strengthening affirmations": "#b3782f", // ochre (no art yet → leaf back)
+  "nature meditations":         "#9a6a88", // plum
+  "walking thoughts":           "#4e7d3f", // green
+  "messages from the earth":    "#cf7f2f", // orange
+  "strengthening affirmations": "#465a7d", // slate
 };
 ```
+
+These are the deck's official colour-coding (matching the "about" card).
+
+### Special cards
+
+A few cards use a `variant`:
+- **`"poem"`** — a full-bleed colour card (set `panel`) with a white poem; use
+  `\n\n` between stanzas. These are the four section "divider" cards.
+- **`"legend"`** — the deck's "about" card, listing each card type in its colour.
 
 To add art for a new type: drop a portrait image in `public/` (it can carry a
 wide matte — it gets trimmed to the artwork and framed by an even 5px white
