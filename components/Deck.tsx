@@ -38,9 +38,10 @@ export default function Deck({ cards }: Props) {
 
     const fit = () => {
       let lo = 9;
-      // Cap the size relative to card width so short meditations don't balloon —
-      // body stays a consistent size across cards, anchored low like the deck.
-      let hi = Math.min(40, el.clientWidth * 0.072);
+      // Cap the size relative to card width so the body stays a calm, consistent
+      // reading size across cards — shorter meditations sit low with airy space
+      // above rather than ballooning to fill the card.
+      let hi = Math.min(26, el.clientWidth * 0.052);
       let best = lo;
       // Binary-search the largest font size at which nothing overflows the card.
       for (let i = 0; i < 16; i++) {
@@ -97,10 +98,7 @@ export default function Deck({ cards }: Props) {
               {card && (
                 <div className={styles.face} ref={faceRef}>
                   <h1 className={styles.title}>{card.title}</h1>
-                  <div className={styles.bodyRow}>
-                    <span className={styles.vlabel}>{card.category}</span>
-                    <p className={styles.body}>{card.body}</p>
-                  </div>
+                  <p className={styles.body}>{card.body}</p>
                 </div>
               )}
             </div>

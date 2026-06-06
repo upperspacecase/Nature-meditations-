@@ -5,21 +5,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Breathing room around the card; a touch more bottom/right for the deck stack. */
-  padding:
-    calc(env(safe-area-inset-top, 0px) + 3.5vw)
-    calc(env(safe-area-inset-right, 0px) + 4.5vw)
-    calc(env(safe-area-inset-bottom, 0px) + 4.5vw)
-    calc(env(safe-area-inset-left, 0px) + 3.5vw);
 }
 
-/* The deck occupies the available space, capped to a card-ish size on desktop. */
+/* The deck is locked to a 5:7 portrait card and sized to the largest such card
+   that fits the viewport (minus a small gap), capped at 30rem wide on desktop. */
 .deck {
+  --gap: clamp(0.75rem, 4.5vw, 2rem);
+  --avail-w: calc(100vw - 2 * var(--gap));
+  --avail-h: calc(
+    100dvh - 2 * var(--gap) - env(safe-area-inset-top, 0px) -
+      env(safe-area-inset-bottom, 0px)
+  );
+  width: min(var(--avail-w), var(--avail-h) * 5 / 7, 30rem);
+  aspect-ratio: 5 / 7;
   position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 30rem;
-  max-height: 46rem;
   perspective: 1800px;
 }
 
@@ -134,29 +133,11 @@
   text-transform: lowercase;
 }
 
-/* Body block anchored toward the lower portion of the card, like the deck. */
-.bodyRow {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 1.1em;
-  padding-top: 1.2em;
-}
-
-.vlabel {
-  flex: none;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  color: var(--ochre);
-  font-weight: 600;
-  font-size: 0.92em;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
-  white-space: nowrap;
-}
-
+/* Body anchored to the bottom of the card, left-aligned, full width. */
 .body {
   margin: 0;
+  margin-top: auto;
+  padding-top: 1.2em;
   color: var(--navy);
   font-weight: 400;
   font-size: 1em;
