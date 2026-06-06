@@ -1,0 +1,51 @@
+:root {
+  /* Calm, muted palette echoing the physical deck. */
+  --paper: #f4efe6;        /* warm off-white background */
+  --paper-deep: #ece4d6;   /* slightly deeper paper for the card front */
+  --ink: #4a2230;          /* deep maroon/brown ink */
+  --ink-soft: #6e4452;     /* softer ink for secondary text */
+  --sage: #8a9a7b;         /* sage accent */
+  --dusty-purple: #9b8aa6; /* dusty-purple accent */
+  --card-shadow: 0 18px 40px -16px rgba(74, 34, 48, 0.45);
+  --radius: 22px;
+  --reading-width: 38rem;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Honor reduced-motion preferences: no flips, just fades. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--dusty-purple);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
