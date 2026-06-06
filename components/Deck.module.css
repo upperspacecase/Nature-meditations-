@@ -90,6 +90,15 @@
   gap: 1.4rem;
 }
 
+/* Category artwork, filling the card full-bleed (clipped to the card's radius). */
+.backArt {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .emblem {
   display: block;
   width: clamp(56px, 16vw, 92px);
@@ -112,35 +121,65 @@
 }
 
 /* The measured/auto-fitted content box. `font-size` is set by JS; everything
-   below is sized in `em` so the whole card scales together. */
+   below is sized in `em` so the whole card scales together.
+
+   Generous, intentional white space. Padding percentages are relative to WIDTH;
+   the card is locked to 5:7, so a vertical fraction maps to width% * 7/5. Hence
+   the ~24% top (≈17% of card height above the header) and ~15% bottom
+   (≈11% of card height below the body). */
 .face {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 8.5% 9% 9.5%;
   overflow: hidden;
   text-align: left;
+}
+
+/* Header region in the upper-left quadrant: ~16% of card height above it, left
+   column. The title is top-anchored here and auto-sized (by JS) to fit, so even
+   a long three-line title stays clear of the body below. */
+.headerBox {
+  position: absolute;
+  top: 16%;
+  left: 9%;
+  right: 14%;
+  height: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .title {
   margin: 0;
   color: var(--ochre);
   font-weight: 700;
-  font-size: 2.5em;
-  line-height: 1.04;
+  line-height: 1.06;
   letter-spacing: -0.01em;
   text-transform: lowercase;
+  /* font-size set by JS (up to ~2.7× the body) */
 }
 
-/* Body anchored to the bottom of the card, left-aligned, full width. */
+/* Fixed lower box: the body lives only here, so a calm gap always sits between
+   the header and the text, with open space to the right and below. Top (42%) /
+   bottom (11%) are % of card HEIGHT; left/right give the narrow measure. Text is
+   bottom-anchored within the box and auto-sized by JS to fit it. */
+.bodyBox {
+  position: absolute;
+  left: 9%;
+  right: 24%;
+  top: 42%;
+  bottom: 11%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
 .body {
   margin: 0;
-  margin-top: auto;
-  padding-top: 1.2em;
   color: var(--navy);
   font-weight: 400;
-  font-size: 1em;
-  line-height: 1.5;
+  line-height: 1.46;
   letter-spacing: 0.002em;
+  /* font-size set by JS */
 }

@@ -8,6 +8,18 @@ type Props = {
   cards: Card[];
 };
 
+/**
+ * Card-back artwork per category ("card type"). Each deck/category has its own
+ * illustrated back; add more entries as new types arrive. Falls back to the
+ * leaf emblem for any category without art yet.
+ */
+const BACK_ART: Record<string, string> = {
+  "messages from the earth": "/0A16B31D-48BD-4BCB-A152-60BC173867CD.png",
+};
+
+/** The back shown at rest, before anything is drawn. */
+const DEFAULT_BACK = "messages from the earth";
+
 /** Pure random pick across the full deck — every draw independent, repeats allowed. */
 function pickRandom(cards: Card[]): Card {
   return cards[Math.floor(Math.random() * cards.length)];
@@ -17,7 +29,10 @@ export default function Deck({ cards }: Props) {
   // `card` is the drawn (or last-drawn) card; `flipped` true = its face is up.
   const [card, setCard] = useState<Card | null>(null);
   const [flipped, setFlipped] = useState(false);
-  const faceRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const headerBoxRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  const bodyBoxRef = useRef<HTMLDivElement>(null);
 
   const handleTap = useCallback(() => {
     if (flipped) {
@@ -31,23 +46,24 @@ export default function Deck({ cards }: Props) {
     }
   }, [cards, flipped]);
 
-  // Shrink the meditation text so the whole card fits the viewport — never scroll.
+  // Auto-size both header and body to their own fixed boxes so the card never
+  // scrolls and a calm gap always sits between them. Each is bottom/top-anchored
+  // with overflow upward, so we measure the element's own height (offsetHeight),
+  // not the box's scrollHeight, which wouldn't see overflow past the anchor.
   useLayoutEffect(() => {
-    const el = faceRef.current;
-    if (!el || !card) return;
+    const title = titleRef.current;
+    const headerBox = headerBoxRef.current;
+    const body = bodyRef.current;
+    const bodyBox = bodyBoxRef.current;
+    if (!title || !headerBox || !body || !bodyBox || !card) return;
 
-    const fit = () => {
-      let lo = 9;
-      // Cap the size relative to card width so the body stays a calm, consistent
-      // reading size across cards — shorter meditations sit low with airy space
-      // above rather than ballooning to fill the card.
-      let hi = Math.min(26, el.clientWidth * 0.052);
+    const largestThatFits = (el: HTMLElement, box: HTMLElement, hi: number) => {
+      let lo = 8;
       let best = lo;
-      // Binary-search the largest font size at which nothing overflows the card.
       for (let i = 0; i < 16; i++) {
         const mid = (lo + hi) / 2;
         el.style.fontSize = `${mid}px`;
-        if (el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth) {
+        if (el.offsetHeight <= box.clientHeight && el.scrollWidth <= box.clientWidth) {
           best = mid;
           lo = mid;
         } else {
@@ -55,6 +71,15 @@ export default function Deck({ cards }: Props) {
         }
       }
       el.style.fontSize = `${best}px`;
+      return best;
+    };
+
+    const fit = () => {
+      // Body: comfortable reading size, capped relative to its column width.
+      const bodyFont = largestThatFits(body, bodyBox, Math.min(22, bodyBox.clientWidth * 0.09));
+      // Header: up to ~2.7× the body, but shrinks to stay within its region so a
+      // long, multi-line title never crowds the body.
+      largestThatFits(title, headerBox, bodyFont * 2.7);
     };
 
     fit();
@@ -62,9 +87,13 @@ export default function Deck({ cards }: Props) {
     document.fonts?.ready.then(fit).catch(() => {});
 
     const ro = new ResizeObserver(fit);
-    ro.observe(el);
+    ro.observe(bodyBox);
+    ro.observe(headerBox);
     return () => ro.disconnect();
   }, [card]);
+
+  // Back artwork follows the drawn card's category (the default before a draw).
+  const backArt = BACK_ART[card?.category ?? DEFAULT_BACK];
 
   return (
     <main className={styles.stage}>
@@ -85,20 +114,38 @@ export default function Deck({ cards }: Props) {
           }
         >
           <div className={styles.inner}>
-            {/* BACK — the face-down deck. */}
+            {/* BACK — the face-down deck (category artwork, leaf fallback). */}
             <div className={styles.back}>
-              <span className={styles.emblem} aria-hidden="true">
-                <Leaf />
-              </span>
-              <span className={styles.backLabel}>messages from the earth</span>
+              {backArt ? (
+                <div
+                  className={styles.backArt}
+                  style={{ backgroundImage: `url("${backArt}")` }}
+                  aria-hidden="true"
+                />
+              ) : (
+                <>
+                  <span className={styles.emblem} aria-hidden="true">
+                    <Leaf />
+                  </span>
+                  <span className={styles.backLabel}>messages from the earth</span>
+                </>
+              )}
             </div>
 
             {/* FRONT — the meditation, laid out like the physical card. */}
             <div className={styles.front}>
               {card && (
-                <div className={styles.face} ref={faceRef}>
-                  <h1 className={styles.title}>{card.title}</h1>
-                  <p className={styles.body}>{card.body}</p>
+                <div className={styles.face}>
+                  <div className={styles.headerBox} ref={headerBoxRef}>
+                    <h1 className={styles.title} ref={titleRef}>
+                      {card.title}
+                    </h1>
+                  </div>
+                  <div className={styles.bodyBox} ref={bodyBoxRef}>
+                    <p className={styles.body} ref={bodyRef}>
+                      {card.body}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
